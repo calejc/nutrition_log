@@ -19,7 +19,7 @@ class Main_App(QMainWindow, Ui_MainWindow):
             QTabWidget, QMainWindow{
                 background: rgb(155,155,155);
             }
-            .weight_label{
+            QLabel#weight_label{
                 color:red;
             }
             
