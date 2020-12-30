@@ -3,5 +3,5 @@
 *.cfg
 /include/*
 /.ipynb_checkpoints/*
-/lib64/*
-/src/__pycache__/*
+/lib64/
+/src/__pycache__/
