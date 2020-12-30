@@ -1,0 +1,6 @@
+/bin/*
+/lib/*
+*.cfg
+/include/*
+/.ipynb_checkpoints/*
+/lib64/*
