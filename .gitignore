@@ -5,3 +5,6 @@
 /.ipynb_checkpoints/*
 /lib64/
 /src/__pycache__/
+/src/*.db
+/src/*.ui
+
