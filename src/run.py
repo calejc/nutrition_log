@@ -7,6 +7,8 @@ from PyQt5 import uic
 from day import Day
 from week import Week
 from layout import Ui_MainWindow
+from grid_widgets import HeaderWidget
+from table_model import TableModel
 
 
 
@@ -19,28 +21,82 @@ class Main_App(QMainWindow, Ui_MainWindow):
             QTabWidget, QMainWindow{
                 background: rgb(155,155,155);
             }
-            QLabel#weight_label{
-                color:red;
+            QLineEdit{
+                border: 1px solid black;
             }
             
         """)
         self.ui.date_input.setDate(QDate.currentDate().addDays(-1))
-        self.ui.save_button.clicked.connect(self.test_function)
-        # self.ui.refresh.clicked.connect(self.snapshot)
-        # self.snapshot()
+        self.populate()
+        self.ui.date_input.dateChanged.connect(self.populate)
+        self.ui.save_button.clicked.connect(self.save_daily)
+        self.weekly_data()
+
+    def populate(self):
+        DATE = self.ui.date_input.date().toJulianDay()
+        conn = sqlite3.connect("test.db")
+        c = conn.cursor()
+        c.execute("select * from test_day where date like ?", [DATE])
+        results = c.fetchall()
+        if len(results) > 0:
+
+            self.setStyleSheet("""
+                QTabWidget, QMainWindow{
+                    background: rgb(155,155,155);
+                }
+                QLineEdit{
+                    border: 1px solid red;
+                }
+            """)
+            r = [i for i in results[0]]
+            for i,v in enumerate(r):
+                if v is None:
+                    r[i] = ""
+            self.ui.weight_input.setText(str(r[1]))
+            self.ui.calories_input.setText(str(r[2]))
+            self.ui.protein_input.setText(str(r[3]))
+            self.ui.carbs_input.setText(str(r[4]))
+            self.ui.steps_input.setText(str(r[5]))
+            self.ui.burned_input.setText(str(r[6]))
+            self.ui.sleep_input.setText(str(r[7]))
+        else:
+            self.reset(setDate=False)
 
 
-    def reset(self):
-        self.ui.date_input.setDate(QDate.currentDate())
+    def overwrite_popup(self, day):
+        date = self.ui.date_input.date().toString("MM/dd/yyyy")
+        msg = QMessageBox()
+        msg.setText("Database already contains an entry for {DATE}.\nOverwrite data?".format(DATE=date))
+        msg.addButton(QPushButton("Overwrite"), QMessageBox.YesRole)
+        msg.addButton(QPushButton("Discard"), QMessageBox.NoRole)
+        x = msg.exec_()
+        if x == 0:
+            day.update()
+        
+
+    def reset(self, setDate):
+        self.setStyleSheet("""
+            QTabWidget, QMainWindow{
+                background: rgb(155,155,155);
+            }
+            QLineEdit{
+                border: 1px solid black;
+            }
+            
+        """)
+        if setDate:
+            self.ui.date_input.setDate(QDate.currentDate())
         self.ui.weight_input.clear()
-        self.ui.calories_input.clear(),
-        self.ui.protein_input.clear(),
-        self.ui.carbs_input.clear(),
-        self.ui.burned_input.clear(),
-        self.ui.steps_input.clear(),
-        self.ui.sleep_input.clear(),
+        self.ui.calories_input.clear()
+        self.ui.protein_input.clear()
+        self.ui.carbs_input.clear()
+        self.ui.burned_input.clear()
+        self.ui.steps_input.clear()
+        self.ui.sleep_input.clear()
 
-    def sql_test(self):
+    # NOT IN USE
+    # To be used on progress picture page for uploading images, saving to DB, fetching images, displaying images
+    def get_image(self):
         conn = sqlite3.connect("test.db")
         c = conn.cursor()
         c.execute("select * from picture limit 1")
@@ -75,8 +131,6 @@ class Main_App(QMainWindow, Ui_MainWindow):
         # except sqlite3.Error as e:
         #     print(e)
 
-
-
     def read_in_picture(self, filepath):
         with open(filepath, 'rb') as f:
             k = f.read()
@@ -85,7 +139,7 @@ class Main_App(QMainWindow, Ui_MainWindow):
         except:
             return None
 
-    def test_function(self):
+    def save_daily(self):
         day = Day(
             DATE = self.ui.date_input.date().toJulianDay(),
             WEIGHT = self.ui.weight_input.text(),
@@ -96,23 +150,47 @@ class Main_App(QMainWindow, Ui_MainWindow):
             BURNED = self.ui.burned_input.text(),
             SLEEP = self.ui.sleep_input.text(),
         )
-        day.save()
-        self.reset()
-        # self.snapshot()
+        if day.find_by_date() is not None:
+            self.overwrite_popup(day)
+        else:
+            day.save()
+        self.reset(setDate=True)
+        self.weekly_data()
 
-    def snapshot(self):
+    def weekly_data(self):
         today = QDate.currentDate().toJulianDay()
-        week_one = Week(today, data.Day_Range.WEEK_ONE_RANGE.value).get_data()
-        week_two = Week(today, data.Day_Range.WEEK_TWO_RANGE.value).get_data()
-        week_three = Week(today, data.Day_Range.WEEK_THREE_RANGE.value).get_data()
-        weekly_data = [week_one, week_two, week_three]
+        today_nice = QDate.currentDate().toString("MM/dd/yyyy")
+        conn = sqlite3.connect("test.db")
+        c = conn.cursor()
+        c.execute("select * from day order by date limit 1")
+        r = c.fetchall()
+        latest_date = r[0][0]
+        weeks = ((today - latest_date)//7)+1
+        weekly_data = []
+        for w in range(weeks):
+            d1 = 7 + (7*w)
+            d2 = 1 + (7*w)
+            new_week = Week(today, [d2, d1]).get_data()
+            if new_week:
+                weekly_data.append(new_week)
+
         headers = []
+        wk_data = []
         for i, w in enumerate(weekly_data):
+            row = [v for v in w.values()]
+            date_rng = "{} - {}".format(row[0][0], row[0][1])
+            row[0] = date_rng
+            wk_data.append(row)
             for n, k in enumerate(w.items()):
-                headers.append(k[0]) if k[0] not in headers else headers
-                item = QTableWidgetItem(str(k[1])) if not isinstance(k[1], tuple) else QTableWidgetItem("{} - {}".format(k[1][0], k[1][0]))
-                self.ui.snapshot_table.setItem(i, n, item)
-        self.ui.snapshot_table.setHorizontalHeaderLabels(headers)
+                header = k[0].replace("_", " ").upper()
+                headers.append(header) if header not in headers else headers
+        print(wk_data)
+        
+        model = TableModel(wk_data, headers)
+        self.ui.weekly_table.setModel(model)
+        self.ui.weekly_table.resizeColumnsToContents()
+        self.ui.weekly_table.horizontalHeader().setStretchLastSection(True)
+        self.ui.weekly_table.verticalHeader().setMinimumSectionSize(60)
 
 
 if __name__ == '__main__':

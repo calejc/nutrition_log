@@ -4,6 +4,8 @@ import sqlite3
 
 class Day():
 
+    DATABASE_FILE = "db.db"
+
     def __init__(self, DATE, WEIGHT, CALORIES, PROTEIN, CARBS, STEPS, BURNED, SLEEP):
         self.DATE = DATE
         self.WEIGHT = WEIGHT
@@ -27,35 +29,33 @@ class Day():
         ))
 
     def save(self):
-        # print ("{} -- {}".format(type(self.DATE), self.DATE))
-        # return 
-        # conn = sqlite3.connect("test.db")
-        # c = conn.cursor()
-        # try:
-            # c.execute("select * from test_day where date like ?", [self.DATE])
-            # conn.commit()
-        # except Error as e:
-            # print(e)
-            # return None
-        # results = c.fetchall()
-
-        if self.find_by_date():
-            return None
-        else:
+        if not self.find_by_date():
             conn = sqlite3.connect("test.db")
             c = conn.cursor()
             c.execute(
                 "INSERT INTO day (date, weight, calories, protein, steps, burned, sleep) VALUES (?, ?, ?, ?, ?, ?, ?)", (self.DATE, self.WEIGHT, self.CALORIES, self.PROTEIN, self.STEPS, self.BURNED, self.SLEEP)
             )
             conn.commit()
-            return True
 
     def find_by_date(self):
-        conn = sqlite3.connect("test.db")
+        conn = sqlite3.connect(DATABASE_FILE)
         c = conn.cursor()
         c.execute("select * from day where date like ?", [self.DATE])
-        conn.commit()
-        if len(c.fetchall()) > 0:
-            return c.fetchall()
+        r = c.fetchall()
+        if len(r) > 0:
+            return r
         else:
             return None 
+    
+    def update(self):
+        pstmt = ""
+        conn = sqlite3.connect(DATABASE_FILE)
+        c = conn.cursor()
+        for i in vars(self):
+            if vars(self)[i] and i is not "DATE":
+                vstr = "{} = {}, ".format(i.lower(), vars(self)[i])
+                pstmt += vstr
+        pstmt = pstmt[:-2]
+        print("update day set {PSTMT} where date like {DATE}".format(PSTMT=pstmt, DATE=self.DATE))
+        c.execute("update day set {PSTMT} where date like {DATE}".format(PSTMT=pstmt, DATE=self.DATE))
+        conn.commit()

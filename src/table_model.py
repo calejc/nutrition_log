@@ -5,41 +5,29 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 
-class TableModel(QTableWidget):
-    def __init__(self, data):
-        super(TableModel, self).__init__()
+class TableModel(QAbstractTableModel):
+    def __init__(self, data, headers, parent=None):
+        QAbstractTableModel.__init__(self, parent)
         self.data = data
-        self.setData()
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
-        # print(self.data)
+        self.headers = headers
 
-    def setData(self):
-        headers = []
-        for n, k in enumerate(self.data.items()):
-            print("TUPLE :: {}) {} -- {}".format(n, k[0], k[1])) if isinstance(k[1], tuple) else print("{}) {} -- {}".format(n, k[0], k[1])) 
-            headers.append(k[0])
-            item = QTableWidgetItem(k[1]) if not isinstance(k[1], tuple) else QTableWidgetItem("{} - {}".format(k[1][0], k[1][0]))
-            print(item)
-            self.setItem(1, n, item)
-        print(headers)
-        self.setHorizontalHeaderLabels(headers)
+    def data(self, index, role):
+        if not index.isValid():
+            return QVariant()
+        elif role != Qt.DisplayRole:
+            return QVariant()
+        return QVariant(self.data[index.row()][index.column()])
 
-    # def data(self, index, role):
-        # if role == Qt.DisplayRole:
-            # return self.data[index.column()][index.row()]
-            # for k,v in enumerate(self.data.items()):
-                # print(self.data[index])
-                # return self.data[index]
+    def headerData(self, col, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return QVariant(self.headers[col])
+        return QVariant()
 
-    # def headerData(self, section, orientation, role):
-        # if role != Qt.DisplayRole 
+    def rowCount(self, parent):
+        return len(self.data)
 
-    # def rowCount(self, index):
-        # return 1
-        # pass
-        # return len(self)
-
-    # def columnCount(self, index):
-        # return 8
+    def columnCount(self, parent):
+        if len(self.data) > 0: 
+            return len(self.data[0]) 
+        return 0
         

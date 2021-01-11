@@ -39,11 +39,16 @@ class Week():
         return QDate.fromJulianDay(x).toString("MM/dd")
 
 
-    def mean(self, list):
-        lst = [a for a in list if a is not None]
+    def mean(self, flist):
+        nlst = [a for a in flist if a is not None or not ""]
+        if nlst:
+            lst = [x for x in nlst if not isinstance(x, str)]
+        else:
+            print("NONE")
+            return None
         try:
             return sum(lst) / len(lst)
-        except ZeroDivisionError as e:
+        except:
             return 0
     
     
@@ -55,7 +60,7 @@ class Week():
         conn = sqlite3.connect("test.db")
         c = conn.cursor()
         try:
-            c.execute("select * from test_day where date between ? and ?", (date_2, date_1))
+            c.execute("select * from day where date between ? and ?", (date_2, date_1))
             return c.fetchall()
         except sqlite3.Error as e:
             print(e)
