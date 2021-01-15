@@ -57,7 +57,7 @@ class Week():
 
 
     def query(self, date_1, date_2):
-        conn = sqlite3.connect("test.db")
+        conn = sqlite3.connect("db.db")
         c = conn.cursor()
         try:
             c.execute("select * from day where date between ? and ?", (date_2, date_1))

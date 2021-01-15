@@ -34,7 +34,7 @@ class Main_App(QMainWindow, Ui_MainWindow):
 
     def populate(self):
         DATE = self.ui.date_input.date().toJulianDay()
-        conn = sqlite3.connect("test.db")
+        conn = sqlite3.connect("db.db")
         c = conn.cursor()
         c.execute("select * from test_day where date like ?", [DATE])
         results = c.fetchall()
@@ -160,7 +160,7 @@ class Main_App(QMainWindow, Ui_MainWindow):
     def weekly_data(self):
         today = QDate.currentDate().toJulianDay()
         today_nice = QDate.currentDate().toString("MM/dd/yyyy")
-        conn = sqlite3.connect("test.db")
+        conn = sqlite3.connect("db.db")
         c = conn.cursor()
         c.execute("select * from day order by date limit 1")
         r = c.fetchall()

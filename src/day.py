@@ -30,7 +30,7 @@ class Day():
 
     def save(self):
         if not self.find_by_date():
-            conn = sqlite3.connect("test.db")
+            conn = sqlite3.connect("db.db")
             c = conn.cursor()
             c.execute(
                 "INSERT INTO day (date, weight, calories, protein, steps, burned, sleep) VALUES (?, ?, ?, ?, ?, ?, ?)", (self.DATE, self.WEIGHT, self.CALORIES, self.PROTEIN, self.STEPS, self.BURNED, self.SLEEP)
@@ -38,7 +38,7 @@ class Day():
             conn.commit()
 
     def find_by_date(self):
-        conn = sqlite3.connect(DATABASE_FILE)
+        conn = sqlite3.connect("db.db")
         c = conn.cursor()
         c.execute("select * from day where date like ?", [self.DATE])
         r = c.fetchall()
@@ -49,7 +49,7 @@ class Day():
     
     def update(self):
         pstmt = ""
-        conn = sqlite3.connect(DATABASE_FILE)
+        conn = sqlite3.connect("db.db")
         c = conn.cursor()
         for i in vars(self):
             if vars(self)[i] and i is not "DATE":
