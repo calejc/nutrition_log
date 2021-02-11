@@ -4,6 +4,8 @@ from PyQt5.QtCore import *
 
 class Week():
 
+    DB_FILE_PATH = '/home/cale/Dropbox/code/python/fitness_app/src/db.db'
+
     def __init__(self, date, days_range):
         self.date_range = None
         self.weight = None
@@ -57,7 +59,7 @@ class Week():
 
 
     def query(self, date_1, date_2):
-        conn = sqlite3.connect("db.db")
+        conn = sqlite3.connect(self.DB_FILE_PATH)
         c = conn.cursor()
         try:
             c.execute("select * from day where date between ? and ?", (date_2, date_1))

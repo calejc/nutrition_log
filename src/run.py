@@ -13,6 +13,9 @@ from table_model import TableModel
 
 
 class Main_App(QMainWindow, Ui_MainWindow):
+
+    DB_FILE_PATH = '/home/cale/Dropbox/code/python/fitness_app/src/db.db'
+
     def __init__(self):
         super(Main_App, self).__init__()
         self.ui = Ui_MainWindow()
@@ -34,9 +37,9 @@ class Main_App(QMainWindow, Ui_MainWindow):
 
     def populate(self):
         DATE = self.ui.date_input.date().toJulianDay()
-        conn = sqlite3.connect("db.db")
+        conn = sqlite3.connect(self.DB_FILE_PATH)
         c = conn.cursor()
-        c.execute("select * from test_day where date like ?", [DATE])
+        c.execute("select * from day where date like ?", [DATE])
         results = c.fetchall()
         if len(results) > 0:
 
@@ -94,10 +97,8 @@ class Main_App(QMainWindow, Ui_MainWindow):
         self.ui.steps_input.clear()
         self.ui.sleep_input.clear()
 
-    # NOT IN USE
-    # To be used on progress picture page for uploading images, saving to DB, fetching images, displaying images
     def get_image(self):
-        conn = sqlite3.connect("test.db")
+        conn = sqlite3.connect(self.DB_FILE_PATH)
         c = conn.cursor()
         c.execute("select * from picture limit 1")
         results = c.fetchall()
@@ -119,17 +120,18 @@ class Main_App(QMainWindow, Ui_MainWindow):
         # ---------------- #
         #  INSERT PICTURE  #
         # ---------------- #
-        # conn = sqlite3.connect("test.db")
-        # c = conn.cursor()
-        # try:
-        #     today = QDate.currentDate().toJulianDay()
-        #     img_binary = self.read_in_picture("imgs/progress_11302020.jpg") 
-        #     c.execute(
-        #         "INSERT INTO picture (date, picture) VALUES (?, ?)", (today, img_binary)
-        #     )
-        #     conn.commit()
-        # except sqlite3.Error as e:
-        #     print(e)
+        conn = sqlite3.connect("test.db")
+        c = conn.cursor()
+        TEST_IMG_FILE = "imgs/progress_11302020.jpg"
+        try:
+            today = QDate.currentDate().toJulianDay()
+            img_binary = self.read_in_picture(TEST_IMG_FILE) 
+            c.execute(
+                "INSERT INTO picture (date, picture) VALUES (?, ?)", (today, img_binary)
+            )
+            conn.commit()
+        except sqlite3.Error as e:
+            print(e)
 
     def read_in_picture(self, filepath):
         with open(filepath, 'rb') as f:
@@ -160,7 +162,7 @@ class Main_App(QMainWindow, Ui_MainWindow):
     def weekly_data(self):
         today = QDate.currentDate().toJulianDay()
         today_nice = QDate.currentDate().toString("MM/dd/yyyy")
-        conn = sqlite3.connect("db.db")
+        conn = sqlite3.connect(self.DB_FILE_PATH)
         c = conn.cursor()
         c.execute("select * from day order by date limit 1")
         r = c.fetchall()
@@ -184,7 +186,6 @@ class Main_App(QMainWindow, Ui_MainWindow):
             for n, k in enumerate(w.items()):
                 header = k[0].replace("_", " ").upper()
                 headers.append(header) if header not in headers else headers
-        print(wk_data)
         
         model = TableModel(wk_data, headers)
         self.ui.weekly_table.setModel(model)

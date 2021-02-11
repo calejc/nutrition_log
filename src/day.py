@@ -4,7 +4,7 @@ import sqlite3
 
 class Day():
 
-    DATABASE_FILE = "db.db"
+    DB_FILE_PATH = '/home/cale/Dropbox/code/python/fitness_app/src/db.db'
 
     def __init__(self, DATE, WEIGHT, CALORIES, PROTEIN, CARBS, STEPS, BURNED, SLEEP):
         self.DATE = DATE
@@ -30,7 +30,7 @@ class Day():
 
     def save(self):
         if not self.find_by_date():
-            conn = sqlite3.connect("db.db")
+            conn = sqlite3.connect(self.DB_FILE_PATH)
             c = conn.cursor()
             c.execute(
                 "INSERT INTO day (date, weight, calories, protein, steps, burned, sleep) VALUES (?, ?, ?, ?, ?, ?, ?)", (self.DATE, self.WEIGHT, self.CALORIES, self.PROTEIN, self.STEPS, self.BURNED, self.SLEEP)
@@ -38,7 +38,7 @@ class Day():
             conn.commit()
 
     def find_by_date(self):
-        conn = sqlite3.connect("db.db")
+        conn = sqlite3.connect(self.DB_FILE_PATH)
         c = conn.cursor()
         c.execute("select * from day where date like ?", [self.DATE])
         r = c.fetchall()
@@ -49,7 +49,7 @@ class Day():
     
     def update(self):
         pstmt = ""
-        conn = sqlite3.connect("db.db")
+        conn = sqlite3.connect(self.DB_FILE_PATH)
         c = conn.cursor()
         for i in vars(self):
             if vars(self)[i] and i is not "DATE":
